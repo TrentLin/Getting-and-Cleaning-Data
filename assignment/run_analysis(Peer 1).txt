@@ -1,0 +1,51 @@
+getwd()
+setwd("/Users/Jackie/Documents/LEARN/gettingdata/gettingdata_course2")
+
+## load all datasets
+xtrain <- read.table("./Dataset/train/X_train.txt")
+ytrain <- read.table("./Dataset/train/y_train.txt")
+subjtrain <- read.table("./Dataset/train/subject_train.txt")
+xtest <- read.table("./Dataset/test/X_test.txt")
+ytest <- read.table("./Dataset/test/y_test.txt")
+subjtest <- read.table("./Dataset/test/subject_test.txt")
+features <- read.table("./Dataset/features.txt")
+activity <- read.table("./Dataset/activity_labels.txt")
+names(activity) <- c("activity#", "activity")
+
+# bind train and test data together
+x <- rbind(xtrain, xtest)
+names(x) <- features$V2
+y <- rbind(ytrain, ytest)
+subject <- rbind(subjtrain, subjtest)
+names(subject) <- "subject"
+names(y) <- "y"
+
+
+# extract measurements on mean and std for each measurement
+
+data <- x
+data <- data[,grep("mean|std", names(data))]
+data <- data[,-grep("Freq", names(data))]
+data <- cbind(data, y, subject)
+
+
+# descriptive activity names for activities in the dataset
+
+data <- merge(data, activity, by.x = "y", by.y = "activity#", all.x = T)
+dim(data)
+data <- data[,-1] # remove y column which was replaced by activity names
+
+
+# average each variable for each activity and each subject
+
+tidydata <- aggregate( .~activity + subject, FUN = mean, data = data)
+dim(tidydata)
+
+# write table
+
+write.table(tidydata, file = "tidydata.txt", sep = ",")
+
+# generating info for CodeBook.md
+
+variables <- data.frame(names(tidydata))
+write.csv(variables, "variables.csv")
